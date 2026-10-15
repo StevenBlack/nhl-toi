@@ -144,8 +144,9 @@ fn spawn_fetcher(season: String, game: String) -> Receiver<Update> {
                 visitor: report::fetch(&season, &game, Side::Visitor),
                 home: report::fetch(&season, &game, Side::Home),
             };
-            if tx.send(update).is_err() {
-                break; // UI has exited
+            let game_over = matches!((&update.visitor, &update.home), (Ok(v), Ok(h)) if v.is_final() && h.is_final());
+            if tx.send(update).is_err() || game_over {
+                break; // UI has exited, or the game is final so nothing more will change
             }
             thread::sleep(REFRESH);
         }
@@ -202,10 +203,13 @@ fn draw(f: &mut Frame, app: &App, game: &str) {
     .areas(f.area());
 
     let status = if app.visitor.status.is_empty() { "loading…" } else { &app.visitor.status };
-    let age = app
-        .updated
-        .map(|t| format!("updated {}s ago", t.elapsed().as_secs()))
-        .unwrap_or_else(|| "waiting for data".into());
+    let age = if app.error.is_none() && app.visitor.is_final() && app.home.is_final() {
+        "final, no longer refreshing".to_string()
+    } else {
+        app.updated
+            .map(|t| format!("updated {}s ago", t.elapsed().as_secs()))
+            .unwrap_or_else(|| "waiting for data".into())
+    };
     let mut lines = vec![Line::from(format!(
         "{} @ {}   |   Game {game}   |   {status}   |   {age}",
         app.visitor.team, app.home.team

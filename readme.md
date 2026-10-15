@@ -33,6 +33,7 @@ Looks like this:
 └─────────────────────────────────────────────────────────┘└────────────────────────────────────────────────────────┘
 Tab/←/→: switch table   1-6: sort by # / Player / TOI / EV / PP / SH (again to reverse)   q: quit
 ```
+
 ## Usage
 
 ```

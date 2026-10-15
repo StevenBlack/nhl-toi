@@ -27,6 +27,13 @@ pub struct TeamReport {
     pub players: Vec<Player>,
 }
 
+impl TeamReport {
+    /// The game clock line reads "Final" (possibly with an OT/SO suffix) once the game is over.
+    pub fn is_final(&self) -> bool {
+        self.status.to_ascii_lowercase().starts_with("final")
+    }
+}
+
 #[derive(Debug, Clone, Copy)]
 pub enum Side {
     Visitor,
