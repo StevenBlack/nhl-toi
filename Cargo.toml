@@ -1,0 +1,10 @@
+[package]
+name = "nhl-toi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+const_format = "0.2.36"
+ratatui = "0.30.2"
+scraper = "0.27.0"
+ureq = "3.4.2"
