@@ -122,7 +122,11 @@ pub fn parse(html: &str) -> TeamReport {
     }
     flush(&mut players, &mut totals);
 
-    TeamReport { team, status, players }
+    TeamReport {
+        team,
+        status,
+        players,
+    }
 }
 
 #[cfg(test)]
@@ -145,8 +149,14 @@ mod tests {
         assert_eq!(r.status, "Period 1 (03:16 Remaining)");
         assert_eq!(r.players.len(), 2);
         let p = &r.players[0];
-        assert_eq!((p.number.as_str(), p.name.as_str()), ("13", "CAUFIELD, COLE"));
-        assert_eq!((p.toi.as_str(), p.ev.as_str(), p.pp.as_str(), p.sh.as_str()), ("05:23", "05:00", "00:20", "00:03"));
+        assert_eq!(
+            (p.number.as_str(), p.name.as_str()),
+            ("13", "CAUFIELD, COLE")
+        );
+        assert_eq!(
+            (p.toi.as_str(), p.ev.as_str(), p.pp.as_str(), p.sh.as_str()),
+            ("05:23", "05:00", "00:20", "00:03")
+        );
         assert_eq!(r.players[1].toi, "00:00");
     }
 }
@@ -158,7 +168,12 @@ mod tmp_real {
         for f in ["/tmp/toi/TV.htm", "/tmp/toi/TH.htm"] {
             let r = super::parse(&std::fs::read_to_string(f).unwrap());
             println!("{} | {} | {}", r.team, r.status, r.players.len());
-            for p in &r.players { println!("{:>3} {:<28} {} {} {} {}", p.number, p.name, p.toi, p.ev, p.pp, p.sh); }
+            for p in &r.players {
+                println!(
+                    "{:>3} {:<28} {} {} {} {}",
+                    p.number, p.name, p.toi, p.ev, p.pp, p.sh
+                );
+            }
         }
     }
 }
