@@ -204,7 +204,7 @@ fn draw(f: &mut Frame, app: &App, game: &str) {
 
     let status = if app.visitor.status.is_empty() { "loading…" } else { &app.visitor.status };
     let age = if app.error.is_none() && app.visitor.is_final() && app.home.is_final() {
-        "final, no longer refreshing".to_string()
+        "Official".to_string()
     } else {
         app.updated
             .map(|t| format!("updated {}s ago", t.elapsed().as_secs()))
