@@ -33,3 +33,26 @@ Looks like this:
 └─────────────────────────────────────────────────────────┘└────────────────────────────────────────────────────────┘
 Tab/←/→: switch table   1-6: sort by # / Player / TOI / EV / PP / SH (again to reverse)   q: quit
 ```
+## Usage
+
+```
+cargo run                           # default game (020106, season 20262027)
+cargo run -- <game id> [season]     # e.g. cargo run -- 020107
+cargo run -- 020106 20262027        # explicit game and season
+```
+
+- **Game id** is the six-digit number at the end of the NHL report URL, e.g. `020106` in
+  `https://www.nhl.com/scores/htmlreports/20262027/TV020106.HTM`.
+- **Season** is the two years joined together, e.g. `20262027`.
+- The visitor and home Time On Ice reports (`TV…` and `TH…`) are re-fetched every 10 seconds.
+
+### Keys
+
+| Key           | Action                                                              |
+|---------------|---------------------------------------------------------------------|
+| `Tab`, `←`/`→` | Switch between the visitor and home table (focused one is cyan)     |
+| `1`–`6`       | Sort the focused table by `#`, `Player`, `TOI`, `EV`, `PP`, `SH`    |
+| same key again | Reverse the sort order                                              |
+| `q`, `Esc`    | Quit                                                                |
+
+Each table sorts independently, and the sort is kept across refreshes.
