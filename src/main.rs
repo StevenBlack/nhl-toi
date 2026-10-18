@@ -117,7 +117,10 @@ impl SortState {
         if self.column == Some(col) {
             self.desc = !self.desc;
         } else {
-            *self = SortState { column: Some(col), desc: col.default_desc() };
+            *self = SortState {
+                column: Some(col),
+                desc: col.default_desc(),
+            };
         }
     }
 
@@ -239,7 +242,11 @@ fn draw(f: &mut Frame, app: &App, game: &str) {
     ])
     .areas(f.area());
 
-    let status = if app.visitor.status.is_empty() { "loading…" } else { &app.visitor.status };
+    let status = if app.visitor.status.is_empty() {
+        "loading…"
+    } else {
+        &app.visitor.status
+    };
     let age = if app.error.is_none() && app.visitor.is_final() && app.home.is_final() {
         "Official".to_string()
     } else {
@@ -252,7 +259,10 @@ fn draw(f: &mut Frame, app: &App, game: &str) {
         app.visitor.team, app.home.team
     ))];
     if let Some(e) = &app.error {
-        lines.push(Line::styled(format!("Error: {e}"), Style::new().fg(Color::Red)));
+        lines.push(Line::styled(
+            format!("Error: {e}"),
+            Style::new().fg(Color::Red),
+        ));
     }
     f.render_widget(
         Paragraph::new(lines).block(Block::bordered().title(" NHL Time On Ice ")),
@@ -293,7 +303,11 @@ fn team_table(r: &TeamReport, sort: SortState, focused: bool) -> Table<'_> {
         ])
     });
 
-    let border = if focused { Style::new().fg(Color::Cyan) } else { Style::new() };
+    let border = if focused {
+        Style::new().fg(Color::Cyan)
+    } else {
+        Style::new()
+    };
     Table::new(
         rows,
         [
