@@ -1,2 +1,2 @@
-# Invoke rustfmt
-find src -name "*.rs" -exec rustfmt {} \;
+# Invoke rustfmt (cargo picks up edition 2024 from Cargo.toml)
+cargo fmt
