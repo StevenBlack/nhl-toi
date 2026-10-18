@@ -1,30 +1,48 @@
+//! Fetches and parses NHL "TOI Shift Report" HTML pages into [`TeamReport`]s.
+
 use scraper::{Html, Selector};
 
+/// Root of NHL's HTML game reports.
 const BASE_URL: &str = "https://www.nhl.com/scores/htmlreports";
 
 /// Chrome major version to impersonate. Chrome freezes the minor parts of its UA string at 0.0.0.
 const CHROME_MAJOR: u32 = 155;
+/// Browser-like `User-Agent` header value.
 const USER_AGENT: &str = const_format::formatcp!(
     "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{CHROME_MAJOR}.0.0.0 Safari/537.36"
 );
+/// Browser-like `Accept` header value.
 const ACCEPT: &str = "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8";
+/// `Accept-Language` header value.
 const ACCEPT_LANGUAGE: &str = "en-US,en;q=0.9";
 
+/// One player's time-on-ice line; times are "MM:SS".
 #[derive(Debug, Clone, Default)]
 pub struct Player {
+    /// Jersey number.
     pub number: String,
+    /// Name as printed in the report ("LAST, FIRST").
     pub name: String,
+    /// Total time on ice.
     pub toi: String,
+    /// Even-strength time.
     pub ev: String,
+    /// Power-play time.
     pub pp: String,
+    /// Short-handed time.
     pub sh: String,
+    /// Special-teams total (`pp` + `sh`).
     pub spt: String,
 }
 
+/// One team's parsed report.
 #[derive(Debug, Clone, Default)]
 pub struct TeamReport {
+    /// Team heading, e.g. "MONTRÉAL CANADIENS".
     pub team: String,
+    /// Game clock line, e.g. "Period 1 (03:16 Remaining)".
     pub status: String,
+    /// Players in report order.
     pub players: Vec<Player>,
 }
 
@@ -35,12 +53,14 @@ impl TeamReport {
     }
 }
 
+/// Which team's report to request.
 #[derive(Debug, Clone, Copy)]
 pub enum Side {
     Visitor,
     Home,
 }
 
+/// Report URL for a season, game id and side.
 pub fn url(season: &str, game: &str, side: Side) -> String {
     let prefix = match side {
         Side::Visitor => "TV",
@@ -49,6 +69,7 @@ pub fn url(season: &str, game: &str, side: Side) -> String {
     format!("{BASE_URL}/{season}/{prefix}{game}.HTM")
 }
 
+/// Downloads and parses one team's report; errors are prefixed with the URL.
 pub fn fetch(season: &str, game: &str, side: Side) -> Result<TeamReport, String> {
     let url = url(season, game, side);
     let mut resp = ureq::get(&url)
@@ -64,6 +85,7 @@ pub fn fetch(season: &str, game: &str, side: Side) -> Result<TeamReport, String>
     Ok(parse(&html))
 }
 
+/// Element text with nbsp normalized and whitespace trimmed.
 fn text(el: scraper::ElementRef) -> String {
     el.text()
         .collect::<String>()
@@ -72,6 +94,7 @@ fn text(el: scraper::ElementRef) -> String {
         .to_string()
 }
 
+/// "MM:SS" to seconds; unparsable parts count as 0.
 fn to_seconds(t: &str) -> u32 {
     t.split(':')
         .fold(0, |acc, part| acc * 60 + part.parse::<u32>().unwrap_or(0))

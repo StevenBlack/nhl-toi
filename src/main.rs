@@ -1,3 +1,9 @@
+//! Terminal UI showing live NHL time-on-ice for both teams of a game.
+//!
+//! A background thread polls the NHL HTML reports (see [`report`]) and the UI
+//! shows one sortable table per team. Keys: `Tab`/`←`/`→` switch table,
+//! `1`-`7` sort by column (again to reverse), `q` quits.
+
 mod report;
 
 use std::sync::mpsc::{self, Receiver};
@@ -13,15 +19,20 @@ use ratatui::{DefaultTerminal, Frame};
 
 use report::{Player, Side, TeamReport};
 
+/// Season used when none is given on the command line.
 const DEFAULT_SEASON: &str = "20262027";
+/// Game id used when none is given on the command line.
 const DEFAULT_GAME: &str = "020106";
+/// Delay between fetches.
 const REFRESH: Duration = Duration::from_secs(10);
 
+/// One fetch result for both teams, sent from the fetcher thread to the UI.
 struct Update {
     visitor: Result<TeamReport, String>,
     home: Result<TeamReport, String>,
 }
 
+/// A table column; also the sort key.
 #[derive(Clone, Copy, PartialEq, Eq)]
 enum Column {
     Number,
@@ -34,6 +45,7 @@ enum Column {
 }
 
 impl Column {
+    /// Columns in display order; index + 1 is the sort key.
     const ALL: [Column; 7] = [
         Column::Number,
         Column::Name,
@@ -44,6 +56,7 @@ impl Column {
         Column::Spt,
     ];
 
+    /// Header text.
     fn label(self) -> &'static str {
         match self {
             Column::Number => "#",
@@ -61,6 +74,7 @@ impl Column {
         !matches!(self, Column::Number | Column::Name)
     }
 
+    /// Ascending order of two players by this column (PP/SH tie-break on each other).
     fn compare(self, a: &Player, b: &Player) -> std::cmp::Ordering {
         match self {
             Column::Number => a
@@ -83,18 +97,22 @@ impl Column {
     }
 }
 
+/// "MM:SS" to seconds; unparsable parts count as 0.
 fn seconds(t: &str) -> u32 {
     t.split(':')
         .fold(0, |acc, part| acc * 60 + part.parse::<u32>().unwrap_or(0))
 }
 
+/// Sort column and direction for one table.
 #[derive(Clone, Copy, Default)]
 struct SortState {
+    /// `None` keeps report order.
     column: Option<Column>,
     desc: bool,
 }
 
 impl SortState {
+    /// Selects `col`, or reverses direction if it's already selected.
     fn press(&mut self, col: Column) {
         if self.column == Some(col) {
             self.desc = !self.desc;
@@ -103,6 +121,7 @@ impl SortState {
         }
     }
 
+    /// Players ordered per this state.
     fn sorted<'a>(&self, players: &'a [Player]) -> Vec<&'a Player> {
         let mut v: Vec<&Player> = players.iter().collect();
         if let Some(col) = self.column {
@@ -116,18 +135,23 @@ impl SortState {
     }
 }
 
+/// UI state.
 #[derive(Default)]
 struct App {
     visitor: TeamReport,
     home: TeamReport,
+    /// Latest fetch errors, joined.
     error: Option<String>,
+    /// Time of the last fully successful fetch.
     updated: Option<Instant>,
     /// Index 0 = visitor (left), 1 = home (right). Each table sorts independently.
     sort: [SortState; 2],
+    /// Table (0 or 1) that receives sort keys.
     focus: usize,
 }
 
 impl App {
+    /// Merges a fetch result, keeping old data for any side that failed.
     fn apply(&mut self, u: Update) {
         let mut errors = Vec::new();
         match u.visitor {
@@ -145,6 +169,7 @@ impl App {
     }
 }
 
+/// Polls both reports every `REFRESH` on a thread; stops once the game is final or the UI exits.
 fn spawn_fetcher(season: String, game: String) -> Receiver<Update> {
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
@@ -163,6 +188,7 @@ fn spawn_fetcher(season: String, game: String) -> Receiver<Update> {
     rx
 }
 
+/// Usage: `nhl-toi [game] [season]`.
 fn main() -> std::io::Result<()> {
     let mut args = std::env::args().skip(1);
     let game = args.next().unwrap_or_else(|| DEFAULT_GAME.into());
@@ -175,6 +201,7 @@ fn main() -> std::io::Result<()> {
     result
 }
 
+/// Event loop: applies updates, draws, handles keys.
 fn run(terminal: &mut DefaultTerminal, rx: &Receiver<Update>, game: &str) -> std::io::Result<()> {
     let mut app = App::default();
     loop {
@@ -203,6 +230,7 @@ fn run(terminal: &mut DefaultTerminal, rx: &Receiver<Update>, game: &str) -> std
     }
 }
 
+/// Renders header, both tables and the key-help footer.
 fn draw(f: &mut Frame, app: &App, game: &str) {
     let [header, body, footer] = Layout::vertical([
         Constraint::Length(3),
@@ -242,6 +270,7 @@ fn draw(f: &mut Frame, app: &App, game: &str) {
     );
 }
 
+/// One team's table; the focused one gets a cyan border.
 fn team_table(r: &TeamReport, sort: SortState, focused: bool) -> Table<'_> {
     let head = Row::new(Column::ALL.map(|c| {
         if sort.column == Some(c) {
