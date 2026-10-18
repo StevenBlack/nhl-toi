@@ -18,6 +18,7 @@ pub struct Player {
     pub ev: String,
     pub pp: String,
     pub sh: String,
+    pub spt: String,
 }
 
 #[derive(Debug, Clone, Default)]
@@ -71,6 +72,17 @@ fn text(el: scraper::ElementRef) -> String {
         .to_string()
 }
 
+fn to_seconds(t: &str) -> u32 {
+    t.split(':')
+        .fold(0, |acc, part| acc * 60 + part.parse::<u32>().unwrap_or(0))
+}
+
+/// Sums two "MM:SS" strings into a "MM:SS" string.
+fn add_times(a: &str, b: &str) -> String {
+    let total = to_seconds(a) + to_seconds(b);
+    format!("{:02}:{:02}", total / 60, total % 60)
+}
+
 /// Pulls one row per player out of an NHL "TOI Shift Report" page.
 ///
 /// Each player is a `td.playerHeading` ("13 CAUFIELD, COLE") followed by a shift
@@ -99,6 +111,7 @@ pub fn parse(html: &str) -> TeamReport {
             p.ev = totals[4].clone();
             p.pp = totals[5].clone();
             p.sh = totals[6].clone();
+            p.spt = add_times(&p.pp, &p.sh);
         }
         totals.clear();
     }
@@ -115,6 +128,7 @@ pub fn parse(html: &str) -> TeamReport {
                 ev: "00:00".into(),
                 pp: "00:00".into(),
                 sh: "00:00".into(),
+                spt: "00:00".into(),
             });
         } else {
             totals.push(t);
@@ -157,6 +171,7 @@ mod tests {
             (p.toi.as_str(), p.ev.as_str(), p.pp.as_str(), p.sh.as_str()),
             ("05:23", "05:00", "00:20", "00:03")
         );
+        assert_eq!(p.spt, "00:23");
         assert_eq!(r.players[1].toi, "00:00");
     }
 }

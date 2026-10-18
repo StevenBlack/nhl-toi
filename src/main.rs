@@ -30,16 +30,18 @@ enum Column {
     Ev,
     Pp,
     Sh,
+    Spt,
 }
 
 impl Column {
-    const ALL: [Column; 6] = [
+    const ALL: [Column; 7] = [
         Column::Number,
         Column::Name,
         Column::Toi,
         Column::Ev,
         Column::Pp,
         Column::Sh,
+        Column::Spt,
     ];
 
     fn label(self) -> &'static str {
@@ -50,6 +52,7 @@ impl Column {
             Column::Ev => "EV",
             Column::Pp => "PP",
             Column::Sh => "SH",
+            Column::Spt => "STT",6
         }
     }
 
@@ -70,6 +73,7 @@ impl Column {
             Column::Ev => seconds(&a.ev).cmp(&seconds(&b.ev)),
             Column::Pp => seconds(&a.pp).cmp(&seconds(&b.pp)),
             Column::Sh => seconds(&a.sh).cmp(&seconds(&b.sh)),
+            Column::Spt => seconds(&a.spt).cmp(&seconds(&b.spt)),
         }
     }
 }
@@ -184,7 +188,7 @@ fn run(terminal: &mut DefaultTerminal, rx: &Receiver<Update>, game: &str) -> std
                 KeyCode::Tab | KeyCode::BackTab => app.focus = 1 - app.focus,
                 KeyCode::Left => app.focus = 0,
                 KeyCode::Right => app.focus = 1,
-                KeyCode::Char(c @ '1'..='6') => {
+                KeyCode::Char(c @ '1'..='7') => {
                     let col = Column::ALL[c as usize - '1' as usize];
                     app.sort[app.focus].press(col);
                 }
@@ -227,7 +231,7 @@ fn draw(f: &mut Frame, app: &App, game: &str) {
     f.render_widget(team_table(&app.home, app.sort[1], app.focus == 1), right);
 
     f.render_widget(
-        Paragraph::new("Tab/←/→: switch table   1-6: sort by # / Player / TOI / EV / PP / SH (again to reverse)   q: quit")
+        Paragraph::new("Tab/←/→: switch table   1-7: sort by # / Player / TOI / EV / PP / SH / STTot (again to reverse)   q: quit")
             .style(Style::new().fg(Color::DarkGray)),
         footer,
     );
@@ -251,6 +255,7 @@ fn team_table(r: &TeamReport, sort: SortState, focused: bool) -> Table<'_> {
             Cell::from(p.ev.as_str()),
             Cell::from(p.pp.as_str()),
             Cell::from(p.sh.as_str()),
+            Cell::from(p.spt.as_str()),
         ])
     });
 
@@ -260,6 +265,7 @@ fn team_table(r: &TeamReport, sort: SortState, focused: bool) -> Table<'_> {
         [
             Constraint::Length(3),
             Constraint::Fill(1),
+            Constraint::Length(5),
             Constraint::Length(5),
             Constraint::Length(5),
             Constraint::Length(5),
