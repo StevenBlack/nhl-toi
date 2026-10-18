@@ -1,0 +1,3 @@
+#!/bin/sh
+cargo build --release
+sudo cp ./target/release/nhl-toi /usr/local/bin/nhl-toi
