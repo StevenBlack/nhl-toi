@@ -52,7 +52,7 @@ impl Column {
             Column::Ev => "EV",
             Column::Pp => "PP",
             Column::Sh => "SH",
-            Column::Spt => "STT",6
+            Column::Spt => "STT",
         }
     }
 
@@ -71,8 +71,13 @@ impl Column {
             Column::Name => a.name.cmp(&b.name),
             Column::Toi => seconds(&a.toi).cmp(&seconds(&b.toi)),
             Column::Ev => seconds(&a.ev).cmp(&seconds(&b.ev)),
-            Column::Pp => seconds(&a.pp).cmp(&seconds(&b.pp)),
-            Column::Sh => seconds(&a.sh).cmp(&seconds(&b.sh)),
+            // PP and SH subsort by each other.
+            Column::Pp => seconds(&a.pp)
+                .cmp(&seconds(&b.pp))
+                .then_with(|| seconds(&a.sh).cmp(&seconds(&b.sh))),
+            Column::Sh => seconds(&a.sh)
+                .cmp(&seconds(&b.sh))
+                .then_with(|| seconds(&a.pp).cmp(&seconds(&b.pp))),
             Column::Spt => seconds(&a.spt).cmp(&seconds(&b.spt)),
         }
     }
