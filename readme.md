@@ -46,10 +46,10 @@ cargo run -- 020106 20262027        # explicit game and season
 ### Keys
 
 | Key           | Action                                                              |
-|---------------|---------------------------------------------------------------------|
-| `Tab`, `←`/`→` | Switch between the visitor and home table (focused one is cyan)     |
-| `1`–`7`       | Sort the focused table by `#`, `Player`, `TOI`, `EV`, `PP`, `SH`,SPT |
-| same key again | Reverse the sort order                                              |
-| `q`, `Esc`    | Quit                                                                |
+|---------------|-------------------------------------------------------------------- -|
+| `Tab`, `←`/`→` | Switch between the visitor and home table (focused one is cyan)   |
+| `1`–`7`       | Sort the focused table by `#`, `Player`, `TOI`, `EV`, `PP`, `SH`,`SPT` |
+| same key again | Reverse the sort order |
+| `q`, `Esc`    | Quit |
 
 Each table sorts independently, and the sort is kept across refreshes.
